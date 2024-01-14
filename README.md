@@ -1,5 +1,7 @@
 <img width="1280" alt="original" src="https://github.com/idrak888/greenplates/assets/67511980/0b11896a-8e8b-4edf-8469-f7472eed6b16">
 <img width="1280" alt="original (1)" src="https://github.com/idrak888/greenplates/assets/67511980/44930db0-2662-4ac8-86d6-2653dd8c9713">
+
+
 ## Inspiration💡
 
 Driven by a commitment to simplify healthy eating and reducing food waste, we developed a healthy recipe generation app infused with the power of Computer Vision and Natural Language Processing. Recognizing the modern challenge of maintaining a balanced diet amid busy schedules, our app utilizes advanced algorithms to understand user preferences, offering personalized recipe suggestions tailored to dietary restrictions, flavor profiles, and time constraints. Our vision is to empower individuals to effortlessly incorporate nutritious and flavorful meals into their lives, making healthy living accessible and enjoyable for everyone.
