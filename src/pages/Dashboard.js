@@ -4,14 +4,15 @@ import axios from 'axios';
 export default function Dashboard() {
 	const [showPreferences, setShowPreferences] = useState(false);
 	const [loadingImage, setLoadingImage] = useState(false);
-	const [ingredients, setIngredients] = useState(["Chicken", "Carrots", "Mustard", "Parmesan", "Lettuce", "Bread", "Milk"]);
-	const [loadingRecipes, setLoadingRecipes] = useState(true);
+	const [ingredients, setIngredients] = useState([]);
+	const [loadingRecipes, setLoadingRecipes] = useState(false);
 	const [loadingItems, setLoadingItems] = useState(true);
 	const [recipes, setRecipes] = useState([]);
 	const [userDoc, setUser] = useState(null);
 	const [showRecipeModal, setShowRecipeModal] = useState(false);
 	const [recipe, setRecipe] = useState("");
 	const [loadRecipe, setLoadRecipe] = useState(true);
+	const [selected, setSelected] = useState([]);
 
 	useEffect(() => {
 		var user = localStorage.getItem("firebase_user_green_plates");
@@ -24,25 +25,8 @@ export default function Dashboard() {
 				name: user.displayName,
 				email: user.email
 			}).then(doc => {
-				console.log(doc);
-			});
-
-			axios.post(`https://green-plate-727ad6cd0524.herokuapp.com/dashboard`, {
-				email: user.email
-			}).then(doc => {
 				setIngredients(doc.data.items);
-				setLoadingItems(false);
-			}).catch(e => {
-				setLoadingItems(false);
-			});
-
-			axios.post(`https://green-plate-727ad6cd0524.herokuapp.com/create/recipe`, {
-				email: user.email
-			}).then(doc => {
-				console.log(doc);
-				setRecipes(JSON.parse(doc.data).recipes);
-				setLoadingRecipes(false);
-			}).catch(e => {
+				setSelected(doc.data.preference);
 				setLoadingItems(false);
 			});
 		}
@@ -77,15 +61,6 @@ export default function Dashboard() {
 				}).catch(e => {
 					setLoadingItems(false);
 				});
-
-				axios.post(`https://green-plate-727ad6cd0524.herokuapp.com/create/recipe`, {
-					email: userDoc.email
-				}).then(doc => {
-					setRecipes(JSON.parse(doc.data).recipes);
-					setLoadingRecipes(false);
-				}).catch(e => {
-					setLoadingItems(false);
-				});
 			});
 			setLoadingImage(false);
 		}).catch(e => {
@@ -115,9 +90,7 @@ export default function Dashboard() {
 						{!loadingItems ?
 							<ul style={{ height: 350, overflowY: "scroll" }}>
 								{ingredients.map((item, index) => {
-									return <li key={index}>{item} <div>{index < 2 ? <span style={{
-										color: "red"
-									}}>Item expires in 1 day</span> : ""} <img onClick={() => {
+									return <li key={index}>{item} <div> <img onClick={() => {
 										axios.post(`https://green-plate-727ad6cd0524.herokuapp.com/deleteItem`, {
 											email: userDoc.email,
 											itemIndex: index
@@ -135,27 +108,45 @@ export default function Dashboard() {
 					</div>
 				</div>
 				<div className='col'>
-					<h3>Generated Recipes</h3>
-					<button className='btn' onClick={() => setShowPreferences(true)}>
-						Manage Preferences
+					<h3 style={{
+						display: "flex",
+						flexDirection: "row",
+						justifyContent: "space-between",
+						alignItems: "center"
+					}}>Recipe List <button className='btn pref' style={{ fontSize: 12, maxWidth: 200 }} onClick={() => setShowPreferences(true)}>
+							Manage Preferences
+						</button></h3>
+					<button className='btn' style={ingredients.length < 1 ? { opacity: 0.6 } : { opacity: 1 }} disabled={ingredients.length < 1} onClick={() => {
+						setLoadingRecipes(true);
+						axios.post(`https://green-plate-727ad6cd0524.herokuapp.com/create/recipe`, {
+							email: userDoc.email
+						}).then(doc => {
+							console.log(doc.data);
+							setRecipes(JSON.parse(doc.data).recipes || JSON.parse(doc.data).healthy_recipes);
+							setLoadingRecipes(false);
+						}).catch(e => {
+							setLoadingItems(false);
+						});
+					}}>
+						Generate Healthy Recipes
 					</button>
 					{loadingRecipes ? <img style={{ display: "block", margin: "auto", marginTop: 50 }} width={60} src="https://media.tenor.com/t5DMW5PI8mgAAAAi/loading-green-loading.gif" /> :
 						<div style={{ height: 400, overflowY: "scroll" }}>
 							{recipes.map(recipe => {
 								return (
-									<div className='recipe' onClick={() => {
+									<div className='recipe' style={{ display: "flex", flexDirection: "row", justifyContent: "space-between", alignItems: "center", fontSize: 13 }} onClick={() => {
 										setLoadRecipe(true);
 										setShowRecipeModal(true);
 										setRecipe({ name: recipe.name, content: "" });
 										axios.post(`https://green-plate-727ad6cd0524.herokuapp.com/create/recipe/steps`, {
 											itemName: recipe.name
 										}).then(doc => {
-											console.log(JSON.parse(doc.data));
-											setRecipe({ name: recipe.name, content: JSON.parse(doc.data).recipe });
+											console.log(doc.data);
+											setRecipe({ name: recipe.name, content: doc.data });
 											setLoadRecipe(false);
 										});
 									}}>
-										{recipe.name}
+										{recipe.name} <span style={{ color: "grey" }}>{recipe.calories}</span>
 									</div>
 								)
 							})}
@@ -173,27 +164,41 @@ export default function Dashboard() {
 							padding: 10,
 							cursor: "pointer"
 						}}>Close</button></h4>
-						<input type="checkbox" id="spicy" name="spicy" value="spicy" />
+						<input checked={selected.includes("spicy")} type="checkbox" id="spicy" name="spicy" value="spicy" onChange={() => setSelected([...selected, "spicy"])} />
 						<label for="spicy"> Spicy</label><br /><br />
 
-						<input type="checkbox" id="sweet" name="sweet" value="sweet" />
+						<input checked={selected.includes("sweet")} type="checkbox" id="sweet" name="sweet" value="sweet" onChange={() => setSelected([...selected, "sweet"])} />
 						<label for="sweet"> Sweet</label><br /><br />
 
-						<input type="checkbox" id="savoury" name="savoury" value="savoury" />
+						<input checked={selected.includes("savoury")} type="checkbox" id="savoury" name="savoury" value="savoury" onChange={() => setSelected([...selected, "savoury"])} />
 						<label for="savoury"> Savoury</label><br /><br />
 
-						<input type="checkbox" id="gluten-free" name="gluten-free" value="gluten-free" />
+						<input checked={selected.includes("gluten-free")} type="checkbox" id="gluten-free" name="gluten-free" value="gluten-free" onChange={() => setSelected([...selected, "gluten-free"])} />
 						<label for="gluten-free"> Gluten-Free</label><br /><br />
 
-						<input type="checkbox" id="Keto" name="Keto" value="Keto" />
+						<input checked={selected.includes("keto")} type="checkbox" id="Keto" name="Keto" value="Keto" onChange={() => setSelected([...selected, "keto"])} />
 						<label for="Keto"> Keto</label><br /><br />
 
-						<input type="checkbox" id="veg" name="veg" value="veg" />
+						<input checked={selected.includes("vegetarian")} type="checkbox" id="veg" name="veg" value="veg" onChange={() => setSelected([...selected, "vegetarian"])} />
 						<label for="veg"> Vegetarian</label><br /><br />
 
 						<br /><br />
 						<button className='btn' onClick={() => {
-							// fetch recipes
+							setShowPreferences(false);
+							setLoadingRecipes(true);
+							axios.put(`https://green-plate-727ad6cd0524.herokuapp.com/add/preferences`, {
+								email: userDoc.email,
+								preference: selected
+							}).then(doc => {
+								axios.post(`https://green-plate-727ad6cd0524.herokuapp.com/create/recipe`, {
+									email: userDoc.email
+								}).then(doc2 => {
+									setRecipes(JSON.parse(doc2.data).recipes);
+									setLoadingRecipes(false);
+								}).catch(e => {
+									setLoadingItems(false);
+								});
+							});
 						}}>Apply</button>
 					</div>
 				</div>
@@ -209,11 +214,7 @@ export default function Dashboard() {
 							cursor: "pointer"
 						}}>Close</button></h4>
 						{loadRecipe ? <img width={40} src="https://media.tenor.com/t5DMW5PI8mgAAAAi/loading-green-loading.gif" /> :
-							Object.entries(recipe.content).map(([key, value]) => (
-								<div key={key}>
-									<p><strong>{key}:</strong> {value}</p>
-								</div>
-							))
+							<p>{recipe.content}</p>
 						}
 					</div>
 				</div>

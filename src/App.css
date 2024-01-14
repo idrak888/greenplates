@@ -253,6 +253,13 @@ h1 strong {
 	width: 100%;
 }
 
+.Dashboard .pref {
+	background-image: linear-gradient(#1a1717, #1f1d1d);
+	-webkit-box-shadow: 0px 5px 0px 0px #000000;
+	-moz-box-shadow: 0px 5px 0px 0px #000000;
+	box-shadow: 0px 5px 0px 0px #000000;
+}
+
 .preferences {
 	width: 100%;
 	position: fixed;
